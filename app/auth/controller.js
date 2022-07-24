@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { secretKey } = require('../config');
 const User = require('../user/model');
+const getToken = require('../utils/get-token');
 
 async function localStrategy(email, password, done) {
   try {
@@ -82,7 +83,34 @@ async function login(request, response, next) {
   })(request, response, next);
 }
 
-async function me(request, response, next) {
+async function logout(request, response, next) {
+  let token = getToken(request);
+
+  let user = await User.findOneAndUpdate(
+    {
+      token: {
+        $in: token
+      }
+    },
+    {
+      $pull: {token}
+    }
+  )
+
+  if(!token || !user) {
+    return response.json({
+      error: 1,
+      message: 'User not found.'
+    })
+  }
+
+  return response.json({
+    error: 0,
+    message: 'Logout success.'
+  })
+}
+
+async function me(request, response) {
   if(request.user) {
     return response.json(request.user);
   }
@@ -96,6 +124,7 @@ async function me(request, response, next) {
 module.exports = {
   register,
   login,
+  logout,
   me,
   localStrategy,
 };

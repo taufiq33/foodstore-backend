@@ -82,9 +82,21 @@ async function login(request, response, next) {
   })(request, response, next);
 }
 
+async function me(request, response, next) {
+  if(request.user) {
+    return response.json(request.user);
+  }
+
+  return response.json({
+    error: 1,
+    message: 'You are not login / token expired / invalid token'
+  })
+}
+
 module.exports = {
   register,
   login,
+  me,
   localStrategy,
 };
 

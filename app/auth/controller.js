@@ -1,4 +1,31 @@
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const { secretKey } = require('../config');
 const User = require('../user/model');
+
+async function localStrategy(email, password, done) {
+  try {
+    let user = await User.findOne({
+      email
+    })
+    .select('-__v -createdAt -updatedAt -cart_items -token -full_name -role');
+
+    if(!user) return done();
+
+    if(bcrypt.compareSync(password, user.password)) {
+      ( {password, ...userWithoutPassword} = user.toJSON() );
+      return done(null, userWithoutPassword);
+    } else {
+      return done(null);
+    }
+  } catch (error) {
+    done(error, null);
+  }
+}
+
+passport.use(new LocalStrategy({usernameField: 'email'}, localStrategy));
 
 async function register(request, response, next) {
   try {
@@ -21,7 +48,43 @@ async function register(request, response, next) {
   }
 }
 
+async function login(request, response, next) {
+  passport.authenticate('local', async function(error, user){
+    if(error) return next(error);
+
+    if(!user) return response.json({
+      error: 1, 
+      message: 'Invalid email / password'
+    });
+
+    let signed = jwt.sign(user, secretKey);
+
+    await User.findOneAndUpdate(
+      {
+        _id: user._id
+      },
+      {
+        $push: {
+          token: signed
+        }
+      },
+      {
+        new: true,
+      }
+    );
+
+    return response.json({
+      message: 'Login success,',
+      user: user,
+      token: signed
+    });
+
+  })(request, response, next);
+}
+
 module.exports = {
   register,
+  login,
+  localStrategy,
 };
 

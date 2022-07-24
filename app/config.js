@@ -15,5 +15,7 @@ module.exports = {
   databasePassword: process.env.DB_PASSWORD,
   databaseAuthSource: process.env.DB_AUTHSOURCE,
 
+  secretKey: process.env.SECRET_KEY,
+
   uploadPath: path.join(path.resolve(__dirname, '..'), targetDirUpload),
 }

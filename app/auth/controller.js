@@ -11,7 +11,7 @@ async function localStrategy(email, password, done) {
     let user = await User.findOne({
       email
     })
-    .select('-__v -createdAt -updatedAt -cart_items -token -full_name -role');
+    .select('-__v -createdAt -updatedAt -cart_items -token -full_name');
 
     if(!user) return done();
 

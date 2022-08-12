@@ -144,12 +144,15 @@ const index = async (request, response, next) => {
   }
   
   try {
+    const count = await Product.find(kriteria).countDocuments();
+
     const products = await Product
       .find(kriteria)
       .limit(parseInt(limit))
       .skip(parseInt(skip))
       .populate('category')
       .populate('tags')
+      .select('-__v')
       ;
 
     return response.json({
@@ -157,6 +160,7 @@ const index = async (request, response, next) => {
       message: 'berhasil mengambil semua data',
       limit: limit,
       skip: skip,
+      count: count,
       data: products
     });
   } catch (error) {

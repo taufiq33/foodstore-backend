@@ -10,16 +10,19 @@ const policyFor = require('../policy');
 
 router.use('/products', (request, response, next) => {
   console.log('router level middleware ... product');
-  let policy = policyFor(request.user);
-  let condition = policy.can('read', 'Product')
-    && policy.can('create', 'Product')
-    && policy.can('delete', 'Product')
-    && policy.can('update', 'Product');
-  if(!condition) {
-    return response.json({
-      error: 1,
-      message: 'forbidden to access Product resource'
-    });
+  // Jika method request adalah GET, kemungkinan itu mengakses endpoint yang diperbolehkan meskipun tanpa melakukan login.
+  // Pengecekan RBAC baru dilakukan ketika method request bukan GET.
+  if (request.method !== 'GET') {
+    let policy = policyFor(request.user);
+    let condition = policy.can('create', 'Product')
+      && policy.can('delete', 'Product')
+      && policy.can('update', 'Product');
+    if (!condition) {
+      return response.json({
+        error: 1,
+        message: 'forbidden to access Product resource'
+      });
+    }
   }
 
   next();

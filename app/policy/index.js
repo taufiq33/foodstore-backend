@@ -14,10 +14,10 @@ const policies = {
     can('read', 'Cart', {user_id: user._id});
     can('update', 'Cart', {user_id: user._id});
 
-    can('read', 'DeliveryAdress', {user_id: user._id});
-    can('create', 'DeliveryAdress', {user_id: user._id});
-    can('update', 'DeliveryAdress', {user_id: user._id});
-    can('delete', 'DeliveryAdress', {user_id: user._id});
+    can('read', 'DeliveryAddress', {user_id: user._id});
+    can('create', 'DeliveryAddress', {user_id: user._id});
+    can('update', 'DeliveryAddress', {user_id: user._id});
+    can('delete', 'DeliveryAddress', {user_id: user._id});
 
     can('read', 'Invoice', {user_id: user._id});
   },

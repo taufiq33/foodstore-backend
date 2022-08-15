@@ -105,8 +105,42 @@ const destroy = async (request, response, next) => {
   }
 }
 
+const index = async (request, response, next) => {
+  let policy = policyFor(request.user);
+
+  try {
+    if(!policy.can('read', 'DeliveryAddress')) {
+      return response.json({
+        error: 1,
+        message: 'forbidden to access this resource'
+      })  
+    }
+
+    let {limit = 10, skip = 0} = request.query;
+    let deliveryAddress = await DeliveryAddress
+      .find({user: request.user._id})
+      .skip(parseInt(skip))
+      .limit(parseInt(limit))
+      .sort('-createdAt');
+    
+    let count = await DeliveryAddress.find({user: request.user._id}).countDocuments();
+
+    if(!deliveryAddress) {
+      deliveryAddress = [];
+    }
+
+    return response.json({
+      count, data: deliveryAddress, 
+    })
+
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   store,
   update,
   destroy,
+  index,
 }

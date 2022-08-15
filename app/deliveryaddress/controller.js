@@ -65,7 +65,48 @@ const update = async (request, response, next) => {
   }
 }
 
+const destroy = async (request, response, next) => {
+  let { deliveryAddressId } = request.params;
+  let policy = policyFor(request.user);
+
+  try {
+    let address = await DeliveryAddress.findOne({_id: deliveryAddressId});
+
+    if(!address){
+      return response.json({
+        error: 1,
+        message: 'Address not found'
+      })
+    }
+    
+    const subjectAddress = subject('DeliveryAddress', {...address, user_id: address.user})
+
+    if(!policy.can('delete', subjectAddress)) {
+      return response.json({
+        error: 1,
+        message: 'Forbidden to access this resource',
+      })
+    }
+
+    let deletedAddress = await DeliveryAddress.findOneAndDelete(
+      {_id: deliveryAddressId}
+    );
+
+    return response.json(deletedAddress);
+  } catch (error) {
+    if(error && error.name === 'ValidationError') {
+      return response.json({
+        error: 1,
+        message: error.message,
+        fields: error.errors,
+      })
+    }
+    next(error);
+  }
+}
+
 module.exports = {
   store,
   update,
+  destroy,
 }

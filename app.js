@@ -31,6 +31,11 @@ app.use(cors());
 app.use(decodeToken());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use((req, res, next) => {
+  console.log(req.ip)
+  setTimeout(next, 3500)
+});
+
 app.use('/api', productRouter);
 app.use('/api', categoriesRouter);
 app.use('/api', tagRouter);

@@ -17,5 +17,11 @@ module.exports = {
 
   secretKey: process.env.SECRET_KEY,
 
+  midtrans: {
+    isProduction: process.env.MIDTRANS_IS_PRODUCTION,
+    serverKey: process.env.MIDTRANS_SERVER_KEY,
+    clientKey: process.env.MIDTRANS_CLIENT_KEY,
+  },
+  
   uploadPath: path.join(path.resolve(__dirname, '..'), targetDirUpload),
 }

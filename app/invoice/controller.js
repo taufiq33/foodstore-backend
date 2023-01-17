@@ -1,4 +1,5 @@
 const Invoice = require('./model');
+const Order = require('../order/model');
 const policyFor = require('../policy');
 const { subject } = require('@casl/ability');
 const midtransClient = require('midtrans-client');
@@ -39,7 +40,6 @@ const show = async (request, response, next) => {
 }
 
 const initiatePayment = async (request, response, next) => {
-  console.log(config);
   try {
     let { order_id } = request.params;
     let invoice = await Invoice
@@ -81,7 +81,54 @@ const initiatePayment = async (request, response, next) => {
   }
 }
 
+const handleMidtransNotification = async (request, response) => {
+  try {
+    const statusResponse = await snap.transaction.notification(request.body);
+      
+    const orderId = statusResponse.order_id;
+    const transactionStatus = statusResponse.transaction_status;
+    const fraudStatus = statusResponse.fraud_status;
+
+    if (transactionStatus === 'capture') {
+      if (fraudStatus === 'accept') {
+        await Order.findOneAndUpdate(
+          { _id: orderId },
+          {
+            status: 'paid'
+          }
+        );
+
+        await Invoice.findOneAndUpdate(
+          { order: orderId },
+          { payment_status: 'paid'},
+          { new: true }
+        );
+
+        return response.status(200).json('ok');
+      }
+    } else if (transactionStatus === 'settlement') {
+      await Order.findOneAndUpdate(
+        { _id: orderId },
+        {
+          status: 'processing'
+        }
+      );
+
+      await Invoice.findOneAndUpdate(
+        { order: orderId },
+        { payment_status: 'paid'},
+      );
+
+      return response.status(200).json('ok');
+    } else {
+      return response.status(200).json('ok');
+    }
+  } catch (error) {
+    return response.status(500).json('error');
+  }
+}
+
 module.exports = {
-  show, initiatePayment
+  show, initiatePayment, handleMidtransNotification
 }
 
